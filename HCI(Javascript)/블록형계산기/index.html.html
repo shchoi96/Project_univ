@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="ko">
+<head>
+	<meta charset="utf-8" />
+	<title>Direct Manipulation of Math Symbols</title>
+</head>
+
+<body>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js' type='text/javascript'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/2.4.6/fabric.min.js" type="text/javascript"></script>
+    <script src="VisualMath/math.min.js" type="text/javascript"></script>
+
+    <canvas id="c" width="1024" height="768">
+        Canvas not supported
+    </canvas>
+
+    <script>
+        const parser = math.parser();
+
+        const SYMBOL_WIDTH = 50;
+        const SYMBOL_HEIGHT = 50;
+
+        let MathApp = {};
+
+        MathApp.symbol_paths = {
+                '+':    "add",
+                '-':    "sub",
+                '*':    "mul",
+                '/':    "div",
+                '(':    "parenthesis_open",
+                ')':    "parenthesis_close",
+                '[':    "squarebracket_open",
+                ']':    "squarebracket_close",
+                '{':    "curlybrace_open",
+                '}':    "curlybrace_close",
+                '.':    "period",
+                ',':    "comma",
+                ':':    "colon",
+                ';':    "semicolon",
+                '=':    "equal",
+                '>':    "more",
+                '<':    "less",
+                '!':    "exclamation"
+        };
+
+        MathApp.blocks = [];
+				MathApp.menu_items = [];
+        MathApp.selected_block = null;
+				MathApp.linked_block;
+
+        MathApp.is_mouse_dragging = false;
+        MathApp.mouse_drag_prev = {x:0, y:0};
+
+        MathApp.block_types = {
+            UNDEFINED:  "undefind",
+            SYMBOL:     "symbol",
+						MENU:				"menu",
+						UP_MENU:		"up_menu"
+        };
+
+        MathApp.initialize = function() {
+            for(let i=0; i <= 9; i++)
+            {
+                let key = i.toString();
+                let value = key;
+                this.symbol_paths[key] = value;
+            }
+
+            for(let c="a".charCodeAt(0); c <= "z".charCodeAt(0); c++)
+            {
+                let key = String.fromCharCode(c);
+                let value = key;
+                this.symbol_paths[key] = value;
+            }
+
+            this.canvas = new fabric.Canvas("c", {
+                backgroundColor: "#eee",
+                hoverCursor: "default",
+                selection: false
+            });
+
+						// 상단 버튼 생성
+						let topMenu = function(){
+							let head = null;
+							let index = 0;
+							let line = arguments[0];
+							for(let j=1;j<arguments.length;j++){
+								name = arguments[j];
+								for(let i=0;i<name.length;i++){
+									let size = {
+											width : SYMBOL_WIDTH,
+											height : SYMBOL_HEIGHT
+									};
+									let position = {
+											x : size.width * (index++ + 0.5),
+											y : size.height * (line + 0.5)
+									};
+									let new_top = new MathApp.Symbol(position, size, name.charAt(i));
+									new_top.type = MathApp.block_types.UP_MENU;
+									if(head == null){
+										head = new_top;
+									}
+									else{
+										new_top.append(head);
+									}
+								}
+								head = null;
+								index+=0.5;
+							}
+						}
+						topMenu(0 ,"sin", "cos", "tan", "log", "sqrt");
+						topMenu(1, "exp", "cross", "dot", "det", "inv")
+						//menu_items
+						{
+							let mnu_destory = new fabric.Rect({
+								left: 22,
+								top: 0,
+								width: 20,
+								height: 20,
+								fill: "rgba(255,255,255,1)",
+								stroke: "rgba(0,0,0,0)",
+								strokeWidth: 1,
+								selectable: false,
+								visible: false
+							});
+							mnu_destory.name = "destroy";
+							let mnu_execute = new fabric.Rect({
+								left: 44,
+								top: 0,
+								width: 20,
+								height: 20,
+								fill: "rgba(255,255,255,1)",
+								stroke: "rgba(0,0,0,0)",
+								strokeWidth: 1,
+								selectable: false,
+								visible: false
+							});
+							mnu_execute.name = "execute";
+							let mnu_disassemble = new fabric.Rect({
+								left: 66,
+								top: 0,
+								width: 20,
+								height: 20,
+								fill: "rgba(255,255,255,1)",
+								stroke: "rgba(0,0,0,0)",
+								strokeWidth: 1,
+								selectable: false,
+								visible: false
+							});
+							mnu_disassemble.name = "disassemble";
+							let mnu_duplicate = new fabric.Rect({
+								left: 88,
+								top: 0,
+								width: 20,
+								height: 20,
+								fill: "rgba(255,255,255,1)",
+								stroke: "rgba(0,0,0,0)",
+								strokeWidth: 1,
+								selectable: false,
+								visible: false
+							});
+							mnu_duplicate.name = "duplicate";
+							MathApp.canvas.add(mnu_destory);
+							MathApp.canvas.add(mnu_execute);
+							MathApp.canvas.add(mnu_disassemble);
+							MathApp.canvas.add(mnu_duplicate);
+
+							MathApp.menu_items.push(mnu_destory);
+							MathApp.menu_items.push(mnu_execute);
+							MathApp.menu_items.push(mnu_disassemble);
+							MathApp.menu_items.push(mnu_duplicate);
+						}
+
+						MathApp.menu_items.forEach(item => {
+							let path = "VisualMath/" + item.name + ".jpg";
+							fabric.Image.fromURL(path, function(img){
+								img.scaleToWidth(20);
+								img.scaleToHeight(20);
+
+								let img_w = img.getScaledWidth();
+								let img_h = img.getScaledHeight();
+
+								img.w = img_w;
+								img.h = img_h;
+
+								img.set({
+										left: item.left + 10 - img_w / 2,
+										top: item.top + 10 - img_h / 2,
+										selectable: false,
+										visible: false
+								});
+								MathApp.canvas.add(img);
+								MathApp.menu_items.push(img);
+							});
+						});
+
+            //Evnet
+						$(document).keydown(function(event) {
+              MathApp.handleKeyDown(event.keyCode);
+            });
+            $(document).keypress(function(event) {
+                let key = String.fromCharCode(event.which);
+                MathApp.handleKeyPress(key);
+            });
+            $(document).mousedown(function(event) {
+                let p = {x: event.pageX, y: event.pageY};
+                MathApp.handleMouseDown(p);
+            });
+            $(document).mouseup(function(event) {
+                let p = {x: event.pageX, y: event.pageY};
+                MathApp.handleMouseUp(p);
+            });
+            $(document).mousemove(function(event) {
+                let p = {x: event.pageX, y: event.pageY};
+                MathApp.handleMouseMove(p);
+            });
+        }
+
+				MathApp.handleKeyPress = function(key) {
+            if (key in this.symbol_paths)
+            {
+                let size = {
+                    width : SYMBOL_WIDTH,
+                    height : SYMBOL_HEIGHT
+                };
+                let position = {
+                    x : Math.random() * (this.canvas.width-size.width) + size.width/2,
+                    y : Math.random() * (this.canvas.height-size.height*3.5) + size.height*3
+                };
+                let new_symbol = new MathApp.Symbol(position, size, key);
+            }
+        }
+
+				MathApp.handleKeyDown = function(key) {
+					if( MathApp.selected_block != null ){
+						if (key == 46){ 			// Del
+							MathApp.selected_block.destroy();
+						}
+						else if (key == 13){	// Enter
+							MathApp.selected_block.execute();
+						}
+						else if (key == 17){	// Ctrl
+							MathApp.selected_block.duplicate();
+						}
+						else if (key == 35){ 	// End
+							MathApp.selected_block.disassemble();
+						}
+					}
+        }
+
+        MathApp.handleMouseDown = function(window_p) {
+            if(MathApp.isInCanvas(window_p))
+            {
+                let canvas_p = MathApp.transformToCanvasCoords(window_p); 	//canvas좌표로 바꿔줌
+								let temp;
+                if( MathApp.selected_block != null )	//뭐가 선택되어 있으면 해제
+                {
+									temp = MathApp.selected_block;
+									MathApp.selected_block.onDeselected();
+                  MathApp.selected_block = null;
+                }
+
+                let block = MathApp.findBlockOn(canvas_p);	// 해당 블록 찾음
+
+                if(block != null)
+                {
+									if(block.type == "symbol"){
+										MathApp.selected_block = block;
+                    MathApp.selected_block.onSelected();
+
+									}
+									else if (block.type == "up_menu"){
+										block.duplicate();
+									}
+									else{
+										MathApp.selected_block = temp;
+										MathApp.selected_block.onSelected();
+										if(block.name == "destroy"){
+											MathApp.selected_block.destroy();
+										}
+										else if(block.name == "execute"){
+											MathApp.selected_block.execute();
+										}
+										else if(block.name == "disassemble"){
+											MathApp.selected_block.disassemble();
+										}
+										else if(block.name == "duplicate"){
+											MathApp.selected_block.duplicate();
+										}
+									}
+                }
+
+                MathApp.is_mouse_dragging = true;
+                MathApp.mouse_drag_prev = canvas_p;
+
+                MathApp.canvas.requestRenderAll();
+            }
+            else
+            {
+                MathApp.is_mouse_dragging = false;
+                MathApp.mouse_drag_prev = {x:0, y:0};
+            }
+        }
+
+        MathApp.handleMouseMove = function(window_p) {
+            if(MathApp.is_mouse_dragging)
+            {
+                let canvas_p = MathApp.transformToCanvasCoords(window_p);
+                if(MathApp.selected_block != null)
+                {
+                    let tx = canvas_p.x - MathApp.mouse_drag_prev.x;
+                    let ty = canvas_p.y - MathApp.mouse_drag_prev.y;
+                    MathApp.selected_block.translate({x: tx, y: ty});
+                }
+                MathApp.mouse_drag_prev = canvas_p;
+
+                MathApp.canvas.requestRenderAll();
+            }
+        }
+
+        MathApp.handleMouseUp = function(window_p) {
+            if(MathApp.is_mouse_dragging)
+            {
+                let canvas_p = MathApp.transformToCanvasCoords(window_p);
+								let currBlock = MathApp.selected_block;
+
+								if (currBlock != null){
+									currBlock = currBlock._head;
+									currBlock.checkBorder();
+								}
+
+                MathApp.is_mouse_dragging = false;
+                MathApp.mouse_drag_prev = {x:0, y:0};
+
+                MathApp.canvas.requestRenderAll();
+            }
+        }
+
+        MathApp.transformToCanvasCoords = function(window_p) {
+            let rect = MathApp.canvas.getElement().getBoundingClientRect();
+            let canvas_p = {
+                x : window_p.x - rect.left,
+                y : window_p.y - rect.top
+            };
+            return canvas_p;
+        }
+
+        MathApp.isInCanvas = function(window_p) {
+            let rect = MathApp.canvas.getElement().getBoundingClientRect();
+            if( window_p.x >= rect.left &&
+                window_p.x < rect.left + rect.width &&
+                window_p.y >= rect.top &&
+                window_p.y < rect.top + rect.height )
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        MathApp.findBlockOn = function(canvas_p) {
+            let x = canvas_p.x;
+            let y = canvas_p.y;
+
+            for(let i=0; i < this.blocks.length; i++)
+            {
+              let block = this.blocks[i];
+
+              if( x >= block.position.x - block.size.width/2 &&
+                  x <= block.position.x + block.size.width/2 &&
+                  y >= block.position.y - block.size.height/2 &&
+                  y <= block.position.y + block.size.height/2 )
+              {
+                  return block;
+              }
+            }
+						for(let i=0;i<4;i++){
+							let menu = MathApp.menu_items[i];
+							if( x >= menu.left &&
+                  x <= menu.left + 20 &&
+                  y >= menu.top &&
+                  y <= menu.top + 20 )
+              {
+                  return menu;
+              }
+            }
+            return null;
+        }
+
+        //
+        MathApp.Block = function(position, size) {
+						this._head = this;			// 연결된 블럭의 처음
+						this._tail = this;			// 연결된 블럭의 끝
+						this.next = null;				// 다음 블럭
+						this.isLinked = false;	// 연결된 블럭인지 판별
+						let boundary = new fabric.Rect({
+								left: 0,
+								top: 0,
+								width: 0,
+								height: 0,
+								fill: "rgba(0,0,0,0)",
+								stroke: "rgba(255,0,0,1)",
+								strokeWidth: 5,
+								selectable: false
+						});
+						MathApp.canvas.add(boundary);
+						this.visual_grp = boundary;	//연결되어 길어졌을 때 사용하는 RECT
+						this.expression = String(this.name);	//연결된 전체의 표현식
+            this.position = position;	//위치
+            this.size = size;	//크기
+            this.type = MathApp.block_types.UNDEFINED;	//블럭 타입
+            this.visual_items = [];	//블럭을 표현하는 items
+						MathApp.blocks.push(this);	//블럭의 모임에 추가
+        }
+
+				MathApp.Block.prototype.append = function(block) {		// 충돌이 있을 시 block 맨 끝에 데이터 추가
+            let currBlock = this._head;
+						let pastedBlock = block._tail;
+						if (!block.isLinked){
+							block.isLinked = true;
+						}
+						if (!this.isLinked){
+							this.isLinked	= true;
+						}
+
+						block._head.expression += currBlock.expression;
+
+						pastedBlock.next = currBlock;
+						while(currBlock != null){
+							currBlock._head = block._head;
+							currBlock = currBlock.next;
+						}
+						currBlock = block._head;
+						while(currBlock != null){
+							currBlock._tail = this._tail;
+							currBlock = currBlock.next;
+						}
+
+        }
+
+				MathApp.Block.prototype.duplicate = function() {
+					let currBlock = this._head;
+					let head = null;
+					while (currBlock != null){
+						let size = {
+								width : SYMBOL_WIDTH,
+								height : SYMBOL_HEIGHT
+						};
+
+						let position = {
+							x: currBlock.position.x,
+							y: currBlock.position.y + 100
+						};
+
+						let new_symbol = new MathApp.Symbol(position, size, currBlock.name);
+						if(head == null){
+							head = new_symbol;
+						}
+						else{
+							new_symbol.append(head);
+						}
+						currBlock = currBlock.next;
+					}
+
+					return head;
+        }
+
+				MathApp.Block.prototype.disassemble = function() {
+					let currBlock = this;
+					let nextBlock;
+					currBlock.visual_grp.set({
+						width: 0,
+						height: 0
+					});
+					while(currBlock != null){
+						currBlock._head = currBlock;
+						currBlock._tail = currBlock;
+						currBlock.isLinked = false;
+						currBlock.expression = currBlock.name;
+						nextBlock = currBlock.next;
+						currBlock.next = null;
+						currBlock = nextBlock;
+					}
+					this.onSelected();
+
+        }
+
+				MathApp.Block.prototype.execute = function() {
+					//문자 같은거 있을 때 실행 안되도록 해야댐
+					result = null;
+					try{
+						result = parser.eval(MathApp.selected_block.expression).toString();
+					}
+					catch(e){
+						result = "error";
+					}
+				  let tokens = result.split('(');
+					let head = null;
+					if(tokens[0] == 'function'){
+						result = tokens[0];
+					}
+					for (let i=0;i<result.length;i++){
+						let size = {
+								width : SYMBOL_WIDTH,
+								height : SYMBOL_HEIGHT
+						};
+						let position = {
+							x: this.position.x + SYMBOL_WIDTH * i,
+							y: this.position.y + 100
+						};
+						let new_symbol = new MathApp.Symbol(position, size, result.charAt(i));
+						if(head == null){
+							head = new_symbol;
+						}
+						else{
+							new_symbol.append(head);
+						}
+					}
+        }
+
+				MathApp.Block.prototype.checkBorder = function() {
+					let currBlock = this._head;
+					while(currBlock != null){
+						x1 = currBlock.position.x - currBlock.size.width/2;
+						x2 = currBlock.position.x + currBlock.size.width/2;
+						y1 = currBlock.position.y - currBlock.size.height/2;
+						y2 = currBlock.position.y + currBlock.size.height/2;
+						for (let i=0;i<MathApp.blocks.length;i++){
+							item = MathApp.blocks[i];
+							if ((item._head === this._head) || (item._head.type == "up_menu")){
+								continue;
+							}
+							xx1 = item.position.x - item.size.width/2;
+							xx2 = item.position.x + item.size.width/2;
+							yy1 = item.position.y - item.size.height/2;
+							yy2 = item.position.y + item.size.height/2;
+							if ((xx1 < x1 && x1 < xx2 && yy1 < y1 && y1 < yy2)
+							 || (xx1 < x1 && x1 < xx2 && yy1 < y2 && y2 < yy2)
+							 || (xx1 < x2 && x2 < xx2 && yy1 < y1 && y1 < yy2)
+							  || (xx1 < x2 && x2 < xx2 && yy1 < y2 && y2 < yy2)) {
+								this.onDeselected();
+								this.append(item);
+								item.onSelected();
+								return;
+							}
+						}
+						currBlock = currBlock.next;
+					}
+				}
+
+        MathApp.Block.prototype.onDeselected = function() {
+						let currBlock = this;
+						currBlock = currBlock._head;
+						if(currBlock.visual_grp != null){
+							currBlock.visual_grp.set({
+								left: 0,
+								top: 0,
+								width: 0,
+								height: 0
+							});
+						}
+            this.visual_items[this.visual_items.length-1].set({
+                stroke: "rgba(0,0,255,1)"
+            });
+						MathApp.menu_items.forEach(item => {
+							item.visible = false;
+						});
+        }
+
+        MathApp.Block.prototype.onSelected = function() {
+
+						if (this.isLinked){
+							let cnt = 1;
+							let currBlock = this._head;
+							MathApp.selected_block = currBlock;
+							while(currBlock != null){
+
+								currBlock.position.x = this._head.position.x + SYMBOL_WIDTH * (cnt-1);
+								currBlock.position.y = this._head.position.y;
+
+								currBlock.visual_items.forEach(item => {
+									MathApp.canvas.bringToFront(item);	//View를 최상위로
+								});
+								currBlock.visual_items[0].set({
+									left: this._head.position.x - SYMBOL_WIDTH/2 + SYMBOL_WIDTH * (cnt-1),
+									top: this._head.position.y - SYMBOL_HEIGHT/2
+								});
+								currBlock.visual_items[1].set({
+									left:MathApp.selected_block.position.x - currBlock.visual_items[1].w/2 + SYMBOL_WIDTH * (cnt-1),
+									top: MathApp.selected_block.position.y - currBlock.visual_items[1].h/2
+								});
+								currBlock.visual_items[2].set({
+									left: this._head.position.x - SYMBOL_WIDTH/2 + SYMBOL_WIDTH * (cnt-1),
+									top: this._head.position.y - SYMBOL_HEIGHT/2
+								});
+
+								cnt++;
+								currBlock = currBlock.next;
+							}
+
+							currBlock = this._head;
+							currBlock.visual_grp.set({
+								left: currBlock.position.x - SYMBOL_WIDTH/2,
+								top: currBlock.position.y - SYMBOL_HEIGHT/2,
+								width: SYMBOL_WIDTH * (cnt-1),
+								height: SYMBOL_HEIGHT,
+							});
+							MathApp.canvas.bringToFront(currBlock.visual_grp);
+						}
+						else {
+							this.visual_items[this.visual_items.length-1].set({
+									stroke: "rgba(255,0,0,1)"
+							});
+
+							this.visual_items.forEach(item => {
+									MathApp.canvas.bringToFront(item);	//View를 최상위로
+							});
+						}
+						for(let i=0;i<4;i++){
+							let item = MathApp.menu_items[i];
+							item.set({
+								visible: true,
+								left: this._head.position.x - SYMBOL_WIDTH/2 + (20 + 2) * i,
+								top: this._head.position.y + SYMBOL_HEIGHT/2 + 5
+							});
+						}
+						for(let i=4;i<8;i++){
+							let item = MathApp.menu_items[i];
+							item.set({
+								visible: true,
+								left: this._head.position.x - SYMBOL_WIDTH/2 + (20 + 2) * (i - 4),
+								top: this._head.position.y + SYMBOL_HEIGHT/2 + 5
+							});
+						}
+
+
+        }
+
+        MathApp.Block.prototype.moveTo = function(p) {
+            let tx = p.x - this.position.x;
+            let ty = p.y - this.position.y;
+
+            this.translate({x: tx, y: ty});
+        }
+
+        MathApp.Block.prototype.translate = function(v) {
+					let currBlock = this._head;
+					currBlock.visual_grp.left += v.x;
+					currBlock.visual_grp.top += v.y;
+					while(currBlock != null){
+						currBlock.position.x += v.x;
+						currBlock.position.y += v.y;
+						currBlock.visual_items.forEach(item => {
+	              item.left += v.x;
+	              item.top += v.y;
+	          });
+						currBlock = currBlock.next;
+					}
+					MathApp.menu_items.forEach(item => {
+						item.left += v.x;
+						item.top += v.y;
+					});
+        }
+
+        MathApp.Block.prototype.destroy = function() {
+					let currBlock = this;
+					if(this == MathApp.selected_block)
+          {
+              MathApp.selected_block = null;
+              this.onDeselected();
+          }
+
+					while(currBlock != null){
+						currBlock.visual_items.forEach(item => {
+							MathApp.canvas.remove(item);
+						});
+						currBlock.visual_items = [];
+						let index = MathApp.blocks.indexOf(currBlock);
+						if(index>-1){
+							MathApp.blocks.splice(index,1);
+						}
+						currBlock = currBlock.next;
+					}
+					MathApp.menu_items.forEach(item => {
+						item.visible = false;
+					});
+        }
+
+        //
+        MathApp.Symbol = function(position, size, name) {
+						this.name = name;
+            MathApp.Block.call(this, position, size);
+            this.type = MathApp.block_types.SYMBOL;
+
+            let block = this;
+            if (name in MathApp.symbol_paths)
+            {
+                let path = "VisualMath/" + MathApp.symbol_paths[name] + ".jpg";
+                fabric.Image.fromURL(path, function(img) {
+                    // (0) Background
+                    let background = new fabric.Rect({
+                        left: 0,
+                        top: 0,
+                        width: size.width,
+                        height: size.height,
+                        fill: "rgba(255,255,255,1)",
+                        stroke: "rgba(0,0,0,0)",
+                        selectable: false
+                    });
+
+                    // (1) Image
+                    img.scaleToWidth(size.width);
+                    img.scaleToHeight(size.height);
+
+                    let img_w = img.getScaledWidth();
+                    let img_h = img.getScaledHeight();
+
+                    img.set({
+                        left: 0,
+                        top: 0,
+                        selectable: false
+                    });
+										img.w = img_w;
+										img.h = img_h;
+                    // (2) Boundary
+                    let boundary = new fabric.Rect({
+                        left: 0,
+                        top: 0,
+                        width: size.width,
+                        height: size.height,
+                        fill: "rgba(0,0,0,0)",
+                        stroke: "rgba(0,0,255,1)",
+                        strokeWidth: 5,
+                        selectable: false
+                    });
+
+                    MathApp.canvas.add(background);
+                    MathApp.canvas.add(img);
+                    MathApp.canvas.add(boundary);
+                    block.visual_items.push(background);
+                    block.visual_items.push(img);
+                    block.visual_items.push(boundary);
+										MathApp.canvas.requestRenderAll();
+
+										block.visual_items[0].set({left: position.x - size.width/2, top: position.y - size.height/2});
+										block.visual_items[1].set({left: position.x - img_w/2, top: position.y - img_h/2});
+										block.visual_items[2].set({left: position.x - size.width/2, top: position.y - size.height/2});
+                });
+            }
+        }
+
+        MathApp.Symbol.prototype = Object.create(MathApp.Block.prototype);
+        //
+        $(document).ready(function() {
+            MathApp.initialize();
+        });
+    </script>
+
+</body>
+</html>
