@@ -1,4 +1,4 @@
-﻿namespace _HW3_2015726045_최승혁
+﻿namespace server
 {
     partial class serverOpen
     {
@@ -41,6 +41,7 @@
             this.button1.TabIndex = 0;
             this.button1.Text = "서버열기";
             this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // txt_IP
             // 
@@ -66,6 +67,7 @@
             this.Controls.Add(this.button1);
             this.Name = "serverOpen";
             this.Text = "세계그림판서버";
+            this.Load += new System.EventHandler(this.serverOpen_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 

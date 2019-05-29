@@ -47,13 +47,14 @@
             this.btn_Fill = new System.Windows.Forms.ToolStripButton();
             this.btn_Color1 = new System.Windows.Forms.ToolStripButton();
             this.btn_Color2 = new System.Windows.Forms.ToolStripButton();
-            this.panel1 = new System.Windows.Forms.Panel();
+            this.panel1 = new client.Form1.DoubleBufferPanel();
             this.panel2 = new System.Windows.Forms.Panel();
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.panel3 = new System.Windows.Forms.Panel();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.button1 = new System.Windows.Forms.Button();
             this.colorDialog1 = new System.Windows.Forms.ColorDialog();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.toolStrip1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.panel3.SuspendLayout();
@@ -88,7 +89,7 @@
             this.btn_Color2});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(961, 60);
+            this.toolStrip1.Size = new System.Drawing.Size(769, 50);
             this.toolStrip1.TabIndex = 2;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -104,7 +105,7 @@
             this.btn_tsdd1.Image = ((System.Drawing.Image)(resources.GetObject("btn_tsdd1.Image")));
             this.btn_tsdd1.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btn_tsdd1.Name = "btn_tsdd1";
-            this.btn_tsdd1.Size = new System.Drawing.Size(53, 57);
+            this.btn_tsdd1.Size = new System.Drawing.Size(49, 47);
             this.btn_tsdd1.Text = "toolStripDropDownButton1";
             // 
             // btn_Hand
@@ -113,7 +114,7 @@
             this.btn_Hand.CheckState = System.Windows.Forms.CheckState.Checked;
             this.btn_Hand.Image = ((System.Drawing.Image)(resources.GetObject("btn_Hand.Image")));
             this.btn_Hand.Name = "btn_Hand";
-            this.btn_Hand.Size = new System.Drawing.Size(263, 42);
+            this.btn_Hand.Size = new System.Drawing.Size(125, 26);
             this.btn_Hand.Text = "Hand";
             this.btn_Hand.Click += new System.EventHandler(this.btn_Shape_Click);
             // 
@@ -121,7 +122,7 @@
             // 
             this.btn_Circle.Image = ((System.Drawing.Image)(resources.GetObject("btn_Circle.Image")));
             this.btn_Circle.Name = "btn_Circle";
-            this.btn_Circle.Size = new System.Drawing.Size(263, 42);
+            this.btn_Circle.Size = new System.Drawing.Size(125, 26);
             this.btn_Circle.Text = "Circle";
             this.btn_Circle.Click += new System.EventHandler(this.btn_Shape_Click);
             // 
@@ -129,7 +130,7 @@
             // 
             this.btn_Line.Image = ((System.Drawing.Image)(resources.GetObject("btn_Line.Image")));
             this.btn_Line.Name = "btn_Line";
-            this.btn_Line.Size = new System.Drawing.Size(263, 42);
+            this.btn_Line.Size = new System.Drawing.Size(125, 26);
             this.btn_Line.Text = "Line";
             this.btn_Line.Click += new System.EventHandler(this.btn_Shape_Click);
             // 
@@ -137,7 +138,7 @@
             // 
             this.btn_Pencil.Image = ((System.Drawing.Image)(resources.GetObject("btn_Pencil.Image")));
             this.btn_Pencil.Name = "btn_Pencil";
-            this.btn_Pencil.Size = new System.Drawing.Size(263, 42);
+            this.btn_Pencil.Size = new System.Drawing.Size(125, 26);
             this.btn_Pencil.Text = "Pencil";
             this.btn_Pencil.Click += new System.EventHandler(this.btn_Shape_Click);
             // 
@@ -145,7 +146,7 @@
             // 
             this.btn_Rect.Image = ((System.Drawing.Image)(resources.GetObject("btn_Rect.Image")));
             this.btn_Rect.Name = "btn_Rect";
-            this.btn_Rect.Size = new System.Drawing.Size(263, 42);
+            this.btn_Rect.Size = new System.Drawing.Size(125, 26);
             this.btn_Rect.Text = "Rect";
             this.btn_Rect.Click += new System.EventHandler(this.btn_Shape_Click);
             // 
@@ -161,7 +162,7 @@
             this.btn_tsdd2.Image = ((System.Drawing.Image)(resources.GetObject("btn_tsdd2.Image")));
             this.btn_tsdd2.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btn_tsdd2.Name = "btn_tsdd2";
-            this.btn_tsdd2.Size = new System.Drawing.Size(53, 57);
+            this.btn_tsdd2.Size = new System.Drawing.Size(49, 47);
             this.btn_tsdd2.Text = "toolStripDropDownButton2";
             // 
             // btn_Line1
@@ -170,7 +171,7 @@
             this.btn_Line1.CheckState = System.Windows.Forms.CheckState.Checked;
             this.btn_Line1.Image = ((System.Drawing.Image)(resources.GetObject("btn_Line1.Image")));
             this.btn_Line1.Name = "btn_Line1";
-            this.btn_Line1.Size = new System.Drawing.Size(263, 42);
+            this.btn_Line1.Size = new System.Drawing.Size(92, 26);
             this.btn_Line1.Text = "1";
             this.btn_Line1.Click += new System.EventHandler(this.btn_Line1_Click);
             // 
@@ -178,7 +179,7 @@
             // 
             this.btn_Line2.Image = ((System.Drawing.Image)(resources.GetObject("btn_Line2.Image")));
             this.btn_Line2.Name = "btn_Line2";
-            this.btn_Line2.Size = new System.Drawing.Size(263, 42);
+            this.btn_Line2.Size = new System.Drawing.Size(92, 26);
             this.btn_Line2.Text = "2";
             this.btn_Line2.Click += new System.EventHandler(this.btn_Line1_Click);
             // 
@@ -186,7 +187,7 @@
             // 
             this.btn_Line3.Image = ((System.Drawing.Image)(resources.GetObject("btn_Line3.Image")));
             this.btn_Line3.Name = "btn_Line3";
-            this.btn_Line3.Size = new System.Drawing.Size(263, 42);
+            this.btn_Line3.Size = new System.Drawing.Size(92, 26);
             this.btn_Line3.Text = "3";
             this.btn_Line3.Click += new System.EventHandler(this.btn_Line1_Click);
             // 
@@ -194,7 +195,7 @@
             // 
             this.btn_Line4.Image = ((System.Drawing.Image)(resources.GetObject("btn_Line4.Image")));
             this.btn_Line4.Name = "btn_Line4";
-            this.btn_Line4.Size = new System.Drawing.Size(263, 42);
+            this.btn_Line4.Size = new System.Drawing.Size(92, 26);
             this.btn_Line4.Text = "4";
             this.btn_Line4.Click += new System.EventHandler(this.btn_Line1_Click);
             // 
@@ -202,7 +203,7 @@
             // 
             this.btn_Line5.Image = ((System.Drawing.Image)(resources.GetObject("btn_Line5.Image")));
             this.btn_Line5.Name = "btn_Line5";
-            this.btn_Line5.Size = new System.Drawing.Size(263, 42);
+            this.btn_Line5.Size = new System.Drawing.Size(92, 26);
             this.btn_Line5.Text = "5";
             this.btn_Line5.Click += new System.EventHandler(this.btn_Line1_Click);
             // 
@@ -211,8 +212,9 @@
             this.btn_Fill.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             this.btn_Fill.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btn_Fill.Name = "btn_Fill";
-            this.btn_Fill.Size = new System.Drawing.Size(70, 57);
+            this.btn_Fill.Size = new System.Drawing.Size(58, 47);
             this.btn_Fill.Text = "채우기";
+            this.btn_Fill.Click += new System.EventHandler(this.btn_Fill_Click);
             // 
             // btn_Color1
             // 
@@ -238,13 +240,14 @@
             // 
             // panel1
             // 
+            this.panel1.AutoScroll = true;
             this.panel1.BackColor = System.Drawing.Color.White;
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(0, 60);
-            this.panel1.Margin = new System.Windows.Forms.Padding(4);
+            this.panel1.Location = new System.Drawing.Point(0, 50);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(961, 480);
+            this.panel1.Size = new System.Drawing.Size(769, 400);
             this.panel1.TabIndex = 3;
+            this.panel1.Click += new System.EventHandler(this.panel1_Click);
             this.panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.panel1_Paint);
             this.panel1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseDown);
             this.panel1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.panel1_MouseMove);
@@ -255,21 +258,19 @@
             this.panel2.Controls.Add(this.textBox2);
             this.panel2.Controls.Add(this.panel3);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel2.Location = new System.Drawing.Point(0, 420);
-            this.panel2.Margin = new System.Windows.Forms.Padding(4);
+            this.panel2.Location = new System.Drawing.Point(0, 350);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(961, 120);
+            this.panel2.Size = new System.Drawing.Size(769, 100);
             this.panel2.TabIndex = 4;
             // 
             // textBox2
             // 
             this.textBox2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBox2.Location = new System.Drawing.Point(0, 0);
-            this.textBox2.Margin = new System.Windows.Forms.Padding(4);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox2.Size = new System.Drawing.Size(961, 88);
+            this.textBox2.Size = new System.Drawing.Size(769, 73);
             this.textBox2.TabIndex = 3;
             // 
             // panel3
@@ -277,41 +278,37 @@
             this.panel3.Controls.Add(this.textBox1);
             this.panel3.Controls.Add(this.button1);
             this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel3.Location = new System.Drawing.Point(0, 88);
-            this.panel3.Margin = new System.Windows.Forms.Padding(4);
+            this.panel3.Location = new System.Drawing.Point(0, 73);
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(961, 32);
+            this.panel3.Size = new System.Drawing.Size(769, 27);
             this.panel3.TabIndex = 2;
             // 
             // textBox1
             // 
             this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.textBox1.Location = new System.Drawing.Point(0, 0);
-            this.textBox1.Margin = new System.Windows.Forms.Padding(4);
             this.textBox1.Name = "textBox1";
-            this.textBox1.Size = new System.Drawing.Size(867, 28);
+            this.textBox1.Size = new System.Drawing.Size(694, 25);
             this.textBox1.TabIndex = 2;
             // 
             // button1
             // 
             this.button1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.button1.Location = new System.Drawing.Point(867, 0);
-            this.button1.Margin = new System.Windows.Forms.Padding(4);
+            this.button1.Location = new System.Drawing.Point(694, 0);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(94, 32);
+            this.button1.Size = new System.Drawing.Size(75, 27);
             this.button1.TabIndex = 1;
-            this.button1.Text = "button1";
+            this.button1.Text = "Say";
             this.button1.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(10F, 18F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(961, 540);
+            this.ClientSize = new System.Drawing.Size(769, 450);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.toolStrip1);
-            this.Margin = new System.Windows.Forms.Padding(4);
             this.Name = "Form1";
             this.Text = "세계그림판";
             this.toolStrip1.ResumeLayout(false);
@@ -328,7 +325,6 @@
 
         private System.Windows.Forms.ImageList imageList1;
         private System.Windows.Forms.ToolStrip toolStrip1;
-        private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.TextBox textBox2;
         private System.Windows.Forms.Panel panel3;
@@ -350,6 +346,8 @@
         private System.Windows.Forms.ToolStripButton btn_Color1;
         private System.Windows.Forms.ToolStripButton btn_Color2;
         private System.Windows.Forms.ColorDialog colorDialog1;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private DoubleBufferPanel panel1;
     }
 }
 

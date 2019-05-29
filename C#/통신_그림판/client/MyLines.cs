@@ -14,6 +14,7 @@ namespace client
         private int thick;
         private bool isSolid;
         private Color color;
+        private int z;
 
         public MyLines()
         {
@@ -22,15 +23,17 @@ namespace client
             thick = 1;
             isSolid = true;
             color = Color.Black;
+            z = 0;
         }
 
-        public void setPoint(Point start, Point finish, int thick, bool isSolid, Color color)
+        public void setPoint(Point start, Point finish, int thick, bool isSolid, Color color, int z)
         {
             point[0] = start;
             point[1] = finish;
             this.thick = thick;
             this.isSolid = isSolid;
             this.color = color;
+            this.z = z;
         }
 
         public Point GetPoint1()
@@ -56,6 +59,11 @@ namespace client
         public Color getColor()
         {
             return color;
+        }
+
+        public int getz()
+        {
+            return z;
         }
     }
 }
