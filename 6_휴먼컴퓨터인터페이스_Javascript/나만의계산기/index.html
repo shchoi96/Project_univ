@@ -1,0 +1,490 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>승혁_계산기</title>
+    <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js' type='text/javascript'></script>
+    <script src='math/math.js' type='text/javascript'></script>
+    <style type="text/css">
+      #calculator {
+        position: relative;
+        width: 300px;
+        height: 480px;
+        background-color: #EDF7F5;
+        color: black;
+        margin: auto;
+        padding: 5px;
+        border: 2px solid #FFFFFF;
+        user-select: none; /*드래그 방지*/
+        font-family: '돋움';
+      }
+      #prev {
+        width: 298px;
+        height: 24px;
+        color: black;
+        background-color: #B7D7D8;
+        margin: 0px 0px -4px 0px;
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+        line-height: 26px;
+        word-wrap: break-word;
+        border: 1px solid #204E5F;
+      }
+      #result {
+        z-index: 1;
+        width: 294px;
+        height: 112px;
+        color: black;
+        background-color: #B7D7D8;
+        margin: 3px 0px 0px 0px;
+        display: inline-block;
+        text-align: left;
+        vertical-align: middle;
+        word-wrap: break-word;
+        user-select: text;
+        overflow-y: auto;
+        resize: none;
+        border: 1px solid #204E5F;
+      }
+      .btn {
+        width: 56px;
+        height: 32px;
+        margin: 0px -3px 2px 0px;
+        font-size: 15px;
+        color: black;
+        background-color: #B7D7D8;
+        display: inline-block;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 30px;
+        cursor: default;
+        border: 1px solid #204E5F;
+      }
+      .btn:hover {
+        cursor: pointer;
+        color: #ffffff;
+        background-color: #000000;
+      }
+      .half {
+        width: 25.8px;
+        margin: 0px -3px 2px 0px;
+        font-size: 18px;
+
+      }
+      #matrix, #func, #compare {
+        position: absolute;
+        left: 65.5px;
+        width: 127px;
+        height: 53px;
+        padding: 2px 1px 1px 2px;
+        background-color: black;
+        display: none;
+      }
+      #matrix {
+        top: 278px;
+      }
+      #func {
+        top: 338px;
+      }
+      #compare {
+        top: 398px;
+      }
+      #newMatrix {
+        position: absolute;
+        top: 250px;
+        left: 65.5px;
+        width: 127px;
+        height: 24px;
+        display: none;
+        border: 1.5px solid black;
+      }
+      .popup {
+        width: 38px;
+        height: 23px;
+        margin: 0px -3px 2px 0px;
+        font-size: 12px;
+        color: black;
+        background-color: #f1f1f1;
+      }
+
+      #history {
+        position: relative;
+        top: 0px;
+        left: 0px;
+        z-index: 2;
+        width: 300px;
+        height: 35px;
+        margin: 0px 0px 3px 0px;
+        color: white;
+        background-color: #434F4F;
+        display: inline-block;
+        text-align: center;
+        vertical-align: middle;
+        overflow-y: auto; /*y축 스크롤 생성*/
+      }
+      #history:hover{
+        top: -70px;
+        left: 0px;
+        height: 105px;
+        margin-bottom: -67px;
+        background-color: #434F4F;
+      }
+      #history li {
+        display: none;
+        text-align: left;
+        word-wrap: break-word; /*줄바꿈*/
+      }
+      #history:hover li{
+        display: block;
+        cursor: pointer;
+      }
+      #history li:hover{
+        background-color: white;
+        color: black;
+      }
+      .color_menu{
+        background-color: #FF8984;
+      }
+      .color_1{
+        background-color: #FFC6A8;
+      }
+      .num {
+        background-color: #FFF8F5;
+      }
+      .oper {
+        background-color: #FFD9F2;
+      }
+
+
+
+
+
+    </style>
+    <script type="text/javascript">
+      $(function(){
+        let parser = math.parser();
+        let displayValue = '0';
+        let prevDisplay = '=';
+        let matDisplay = '';
+        let prev_oper = false;
+        let isDeg = false;
+        let copyData = '';
+        let inputValue = '';
+        let cursorBtn = false;
+        $('#result').text(displayValue);
+        //버튼 토글기능
+        let changeString = function(string1, string2){
+          $('.btn').each(function(index,key){
+            if($(this).html() === string1) $(this).html(string2);
+          });
+        };
+        //버튼입력
+        $('.btn').each(function(index, key){
+          //0이면 빈값으로 선처리
+          $(this).click(function(e){
+            inputValue='';
+            if(displayValue === '0'){
+              displayValue = '';
+              //이전에 계산된 값이 있을 때 음수 '-'표현이 아니라면 바로 계산되게.
+              if($('#matrix').css('display') == 'none'){
+                if($(this).hasClass('oper') && $(this).text() != '-' && $('#prev').text() != '=')
+                  displayValue = parser.eval($('#prev').text().substr(1));
+              }
+            }
+            //연산이 중복되서 입력되지 않도록하기
+            if($(this).hasClass('oper') && prev_oper) displayValue = displayValue.slice (0,-1);
+
+            if($(this).text() === 'EV'){
+              try{
+                //연산기호로 끝났을 경우 무시하기 위함
+                if(prev_oper) displayValue = displayValue.slice(0,-1);
+                //계산 전의 식을 저장 후 계산
+                prevDisplay = '='+displayValue;
+                if(displayValue != '') displayValue = parser.eval(displayValue).toString();
+                else displayValue = '0';
+                //계산된 식이 함수정의이면 function이 출력되도록.
+                var tokens = displayValue.split(' ');
+                if(tokens[0] == 'function')
+                {
+                    displayValue = tokens[0];
+                }
+                //history에 계산식을 저장
+                if(prevDisplay != '='){
+                  $('#history').append('<li>'+prevDisplay.slice(1)+'</li>');
+                  //생성된 기록을 history에서 눌렀을 때 클립보드에 복사되도록
+                  $('li').on('click', function(){
+                    copyData = $(this).text();
+                    (function (x){
+                      var dummy = document.createElement("textarea");
+                      document.body.append(dummy);
+                      dummy.value = x;
+                      dummy.select();
+                      document.execCommand("copy");
+                      document.body.removeChild(dummy);
+                    })(copyData);
+                  });
+                }
+                //화면에 출력
+                $('#result').text(displayValue);
+                if(prevDisplay != '=') $('#prev').text(prevDisplay);
+                //계산이 끝났으니 displayValue값 초기화
+                displayValue = '0';
+              }
+              catch (e){
+                  displayValue = '0';
+                  if(displayValue != 'function') $('#result').text(e);
+              }
+            }
+            else{
+              //EV이외의 다른 버튼들
+              if($(this).text() === 'copy'){
+                document.execCommand('copy');
+                copyData = window.getSelection().toString();
+              }
+              else if ($(this).text() === 'paste'){
+                if (!cursorBtn) displayValue += copyData;
+                else inputValue = copyData;
+              }
+              else if ($(this).text() === '도움말'){
+                displayValue = '이 도움말을 지우기 위해 CL을 누르십시오.\n\
+ - 맨 위의 텍스트상자는 계산한 수식이 기록되는 곳 \n\
+ - 이 글이 보이는 곳은 수식이 입력되는 곳 \n\
+ - History가 쓰여진 공간은 그 위에 마우스를 올렸을 때 계산기 실행 이후 계산된 수식들이 나타나는 곳. 수식을 누르게 되면 Copy가 된다.\n\
+ - Copy : 원하는 문자들을 영역지정 한 뒤 이 버튼을 누르면 그 문자들이 복사가 된다. \n\
+ - Paste : 복사가 된 문자들이 붙여넣어진다. \n\
+ - 행렬, 함수 ,비교 버튼을 누르면 해당하는 메뉴가 활성화되어, 관련된 함수나 기능을 사용할 수 있다. \n\
+ - → : 이 버튼을 눌러 활성화시키면, 입력된 수식에서 원하는 위치에 커서를 지정할 수 있게 된다. 커서 지정 후 문자 삽입을 시도하면 그 위치에 문자가 삽입된다. \n\
+ - ans : 바로 이전에 계산된 결과가 있다면 그 결과를 바로 사용할 수 있다.\n\
+ - EV : 입력된 수식을 계산한다. \n\
+ - CL : 수식입력을 모두 지운다. \n\
+';
+                $('#result').text(displayValue);
+
+              }
+              else if ($(this).text() === 'Del'){
+                if(displayValue !== ''){
+                  //한 묶음씩 지울 것들을 지정해서 지움.
+                  let string;
+                  let isDel = false;
+                  let btns = ['sin', 'cos', 'tan', 'log', 'sqrt', 'exp', 'pi', 'sin-1','cos-1','tan-1','ln', 'cross', 'dot', 'multiply', 'det', 'inv', '==', '!='];
+                  for (i in btns){
+                    string = btns[i];
+                    if(displayValue.substr(-1*string.length) === string){
+                      displayValue = displayValue.slice(0,-1*string.length);
+                      isDeg = false;
+                      isDel = true;
+                      break;
+                    }
+                  }
+                  if(!isDel) displayValue = displayValue.slice(0,-1);
+                }
+              }
+              else if ($(this).text() === 'CL'){
+                isDeg = false;
+                displayValue = '0';
+                inputValue = '0';
+              }
+              else if ($(this).text() === '→'){
+                if (cursorBtn){
+                  cursorBtn = !cursorBtn;
+                  $(this).css('background-color', '#B7D7D8');
+                  $(this).css('color', 'black');
+                }
+                else{
+                  cursorBtn = !cursorBtn;
+                  $(this).css('background-color', 'black');
+                  $(this).css('color', 'white');
+                }
+              }
+              else if ($(this).text() === 'x!'){
+              if (!cursorBtn) displayValue += '!';
+              else inputValue = '!';
+              }
+              else if ($(this).text() === '행렬'){
+                if($('#matrix').css('display') == 'none'){
+                  $('#matrix').css('display', 'inline-block');
+                  $('#newMatrix').css('display', 'inline-block');
+                }
+                else {
+                  $('#matrix').css('display', 'none');
+                  $('#newMatrix').css('display', 'none');
+                  $('#newMatrix').val('');
+                }
+              }
+              else if ($(this).text() === '함수'){
+                if($('#func').css('display') == 'none') $('#func').css('display', 'inline-block');
+                else $('#func').css('display', 'none');
+              }
+              else if ($(this).text() === '비교'){
+                if($('#compare').css('display') == 'none') $('#compare').css('display', 'inline-block');
+                else $('#compare').css('display', 'none');
+              }
+              else if ($(this).text() === 'ans'){
+                if (!cursorBtn) {
+                  if ($('#prev').text() !== '=') displayValue += parser.eval($('#prev').text().substr(1)).toString();
+                }
+                else {
+                  if ($('#prev').text() !== '=') inputValue = parser.eval($('#prev').text().substr(1)).toString();
+                }
+              }
+              else if ($(this).text() === '생성'){
+                $('#matrix').css('display', 'none');
+                $('#newMatrix').css('display', 'none');
+                //벡터, 행렬 생성
+                if($('#newMatrix').val() !== ''){
+                  let matStr = $('#newMatrix').val().toString().split('*');
+                  let newMatrixFunction = function(matStr, j) {
+                    if (!cursorBtn) displayValue += '[';
+                    else inputValue += '[';
+                    for(let i=0;i<parseInt(matStr[j])-1;i++){
+                      if(matStr[j+1] !== undefined) newMatrixFunction(matStr, j+1);
+                      if (!cursorBtn) displayValue += ',';
+                      else inputValue += ',';
+                    }
+                    if(matStr[j+1] !== undefined) newMatrixFunction(matStr, j+1);
+                    if (!cursorBtn) displayValue += ']';
+                    else inputValue += ']';
+                  };
+                  newMatrixFunction(matStr, 0);
+                }
+                $('#newMatrix').val('');
+              }
+              else if ($(this).text() === '×'){
+                if (!cursorBtn) displayValue += 'multiply';
+                else inputValue = 'multiply';
+              }
+              else if ($(this).text() === 'f(x)'){
+                if (!cursorBtn) displayValue += 'f';
+                else inputValue = 'f';
+              }
+              else if ($(this).text() === 'g(x)'){
+                if (!cursorBtn) displayValue += 'g';
+                else inputValue = 'g';
+              }
+              else if ($(this).hasClass('oper') || $(this).hasClass('num')){
+                if($('#matrix').css('display') != 'none'){
+                  matDisplay = $('#newMatrix').val().toString() + $(this).text();
+                  $('#newMatrix').val(matDisplay);
+                }
+                else{
+                  if (!cursorBtn) displayValue += $(this).text();
+                  else inputValue = $(this).text();
+                }
+
+              }
+              else{
+                if (!cursorBtn) displayValue += $(this).text();
+                else inputValue = $(this).text();
+              }
+
+              if (cursorBtn && $(this).text() != '→') {
+                var input = document.getElementById('result');
+                var selectPos = input.selectionStart;
+                var beforeTxt = displayValue.substr(0,selectPos);
+                var afterTxt = displayValue.substr(selectPos);
+                displayValue = beforeTxt + inputValue + afterTxt;
+                input.focus();
+                if (displayValue === '' || displayValue === '00') displayValue = '0';
+                $('#result').text(displayValue);
+                input.setSelectionRange(selectPos+inputValue.length,selectPos+inputValue.length);
+              }
+              else {
+                //화면출력
+                if (displayValue === '') displayValue = '0';
+                $('#result').text(displayValue);
+              }
+
+
+              //연산기능버튼이 중복입력되지 않도록 하기위한 prev_oper
+              if($(this).hasClass("oper")) prev_oper = true;
+              else prev_oper = false;
+
+            }
+
+          });
+        }); //버튼입력이벤트 끝
+      }); //ready 끝
+    </script>
+  </head>
+
+
+  <body>
+    <div id="calculator">
+      <span id="prev">=</span>
+      <textarea id="result" rows="8" cols="80"></textarea>
+      <span id="history">History
+
+      </span>
+      <span class="btn color_1">copy</span>
+      <span class="btn color_1">paste</span>
+      <span id="support" class="btn color_menu">도움말</span>
+      <span class="btn color_1">Del</span>
+      <span class="btn color_1">CL</span>
+      <span class="btn">→</span>
+      <span class="btn">sin</span>
+      <span class="btn">cos</span>
+      <span class="btn">tan</span>
+      <span class="btn oper">^</span>
+      <span class="btn half">[</span>
+      <span class="btn half">]</span>
+      <span class="btn">log</span>
+      <span class="btn">sqrt</span>
+      <span class="btn">exp</span>
+      <span class="btn oper">%</span>
+      <span class="btn half">(</span>
+      <span class="btn half">)</span>
+      <span class="btn">pi</span>
+      <span class="btn half">e</span>
+      <span class="btn half">i</span>
+      <span class="btn">x!</span>
+      <span class="btn oper">/</span>
+      <span class="btn color_menu">행렬</span>
+      <span class="btn num">7</span>
+      <span class="btn num">8</span>
+      <span class="btn num">9</span>
+      <span class="btn oper">*</span>
+      <span class="btn color_menu">함수</span>
+      <span class="btn num">4</span>
+      <span class="btn num">5</span>
+      <span class="btn num">6</span>
+      <span class="btn oper">-</span>
+      <span class="btn color_menu">비교</span>
+      <span class="btn num">1</span>
+      <span class="btn num">2</span>
+      <span class="btn num">3</span>
+      <span class="btn oper">+</span>
+      <span class="btn">ans</span>
+      <span class="btn half oper">.</span>
+      <span class="btn half oper">,</span>
+      <span class="btn num">0</span>
+      <span class="btn oper">=</span>
+      <span class="btn color_1">EV</span>
+
+      <input id="newMatrix" type="text" value="">
+      <div id="matrix">
+        <span class="btn popup">생성</span>
+        <span class="btn popup">cross</span> <!--외적 3차원 -->
+        <span class="btn popup">dot</span> <!--내적 n차원 -->
+        <span class="btn popup">×</span> <!--행렬곱 / multiply-->
+        <span class="btn popup">det</span> <!--행렬식 -->
+        <span class="btn popup">inv</span> <!--역행렬-->
+      </div>
+      <div id="func">
+        <span class="btn popup">f(x)</span>
+        <span class="btn popup">g(x)</span>
+        <span class="btn popup">x</span>
+        <span class="btn popup">y</span>
+        <span class="btn popup">z</span>
+      </div>
+      <div id="compare">
+        <span class="btn popup">==</span>
+        <span class="btn popup">!=</span>
+        <span class="btn popup">></span>
+        <span class="btn popup"><</span>
+        <span class="btn popup">>=</span>
+        <span class="btn popup"><=</span>
+      </div>
+    </div>
+  </body>
+</html>
