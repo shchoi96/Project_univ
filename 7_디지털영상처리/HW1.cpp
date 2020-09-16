@@ -1,4 +1,5 @@
 #include <opencv2/opencv.hpp>
+#include <string>
 #include <iostream>
 #include <cmath> // sin, cos
 
@@ -13,6 +14,7 @@ Mat Rotate(double theta, Mat img_in);
 int main()
 {
 	// 초기화 및 전처리
+	string out_name;
 	Mat img_out;
 	Mat img_in;
 	img_in = imread("Lena.png");					// 이미지 읽기
@@ -31,6 +33,8 @@ int main()
 		cin >> x >> y;
 		cout << endl;
 		img_out = Resize(x, y, img_in);
+		out_name = "Lena" + to_string(img_out.size().width) + "x" + to_string(img_out.size().height) + ".png";
+
 		break;
 	case 2: // 영상 회전
 		int theta;
@@ -38,6 +42,7 @@ int main()
 		cin >> theta;
 		cout << endl;
 		img_out = Rotate(theta, img_in);
+		out_name = "LenaTurn" + to_string(theta) + ".png";
 		break;
 	}
 
@@ -45,7 +50,8 @@ int main()
 	imshow("input image", img_in);
 	cout << "Input Image Size  x : " << img_in.size().width << " , y : " << img_in.size().height << endl;
 	imshow("output image", img_out);
-	
+	imwrite(out_name, img_out);
+
 	waitKey(0);
 
 	return 0;
@@ -93,6 +99,7 @@ Mat Rotate(double theta, Mat img_in)
 	
 	int mid_x = x / 2;
 	int mid_y = y / 2;
+	cout << "Rotate " << theta << " Degree" << endl;
 	// radian 에서 degree로 변환
 	theta = -theta * CV_PI / 180.0;
 	for (int i = 0; i < x * y; i++)
@@ -113,8 +120,7 @@ Mat Rotate(double theta, Mat img_in)
 			pOutData[i] = pData[rot_col + rot_raw * x];
 		else
 			pOutData[i] = 255;
-	}
-	cout << "Rotate " << theta << " Degree" << endl;
+	}	
 	return img;
 }
 
